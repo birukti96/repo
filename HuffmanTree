@@ -1,0 +1,91 @@
+import java.util.*;
+
+public class HuffmanTree {
+
+    static class Node implements Comparable<Node> {
+        char character;
+        int frequency;
+        Node left, right;
+
+        public Node(char character, int frequency) {
+            this.character = character;
+            this.frequency = frequency;
+        }
+
+        @Override
+        public int compareTo(Node other) {
+            return this.frequency - other.frequency;
+        }
+    }
+
+    public static Map<Character, String> generateCodes(Node root) {
+        Map<Character, String> codes = new HashMap<>();
+        generateCodesHelper(root, "", codes);
+        return codes;
+    }
+
+    private static void generateCodesHelper(Node node, String code, Map<Character, String> codes) {
+        if (node == null) return;
+        if (node.left == null && node.right == null) { // Leaf node
+            codes.put(node.character, code);
+        }
+        generateCodesHelper(node.left, code + "0", codes);
+        generateCodesHelper(node.right, code + "1", codes);
+    }
+
+    public static Node buildHuffmanTree(Map<Character, Integer> freqMap) {
+        PriorityQueue<Node> priorityQueue = new PriorityQueue<>();
+
+        for (Map.Entry<Character, Integer> entry : freqMap.entrySet()) {
+            priorityQueue.add(new Node(entry.getKey(), entry.getValue()));
+        }
+
+        while (priorityQueue.size() > 1) {
+            Node left = priorityQueue.poll();
+            Node right = priorityQueue.poll();
+            Node merged = new Node('\0', left.frequency + right.frequency);
+            merged.left = left;
+            merged.right = right;
+            priorityQueue.add(merged);
+        }
+
+        return priorityQueue.poll();
+    }
+
+    public static void main(String[] args) {
+        String input = "create a huffman tree";
+        Map<Character, Integer> freqMap = new HashMap<>();
+
+        for (char c : input.toCharArray()) {
+            freqMap.put(c, freqMap.getOrDefault(c, 0) + 1);
+        }
+
+        Node root = buildHuffmanTree(freqMap);
+        Map<Character, String> codes = generateCodes(root);
+
+        // Print Huffman codes
+        System.out.println("Huffman Codes:");
+        for (Map.Entry<Character, String> entry : codes.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+
+        // Encode input text
+        StringBuilder encodedText = new StringBuilder();
+        for (char c : input.toCharArray()) {
+            encodedText.append(codes.get(c));
+        }
+        System.out.println("\nEncoded Text: " + encodedText);
+
+        // Decode the encoded text
+        StringBuilder decodedText = new StringBuilder();
+        Node currentNode = root;
+        for (char bit : encodedText.toString().toCharArray()) {
+            currentNode = bit == '0' ? currentNode.left : currentNode.right;
+            if (currentNode.left == null && currentNode.right == null) { // Leaf node
+                decodedText.append(currentNode.character);
+                currentNode = root;
+            }
+        }
+        System.out.println("\nDecoded Text: " + decodedText);
+    }
+}
